@@ -1,0 +1,7 @@
+*.mp3
+*.mkv
+*.txt
+source/*
+!source/empty
+output/*
+!output/empty
