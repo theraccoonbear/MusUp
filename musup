@@ -10,7 +10,15 @@ my $files = [grep { /\.mp3$/ } readdir DFH ];
 
 sub getID3 {
     my $path = shift @_;
-    return { map { $_ =~ s/^\s+//; $_ =~ s/\s+$//; my @pts = split(/\:\s+/, $_, 2); $pts[0] => $pts[1]; } sort split(/\n/, `id3tool '$path'`) };
+    my $id3 = { map { $_ =~ s/^\s+//; $_ =~ s/\s+$//; my @pts = split(/\:\s+/, $_, 2); $pts[0] => $pts[1]; } sort split(/\n/, `id3tool '$path'`) };
+    if (! $id3->{'Song Title'}) {
+        my $tt = $path;
+        $tt =~ s/^.+\/([^\/]+)$/$1/;
+        $tt =~ s/\d+(\s+-\s+)?//;
+        $tt =~ s/\.mp3$//i;
+        $id3->{'Song Title'} = $tt;
+    }
+    return $id3;
 }
 
 sub getMeta {
@@ -71,13 +79,15 @@ close MFH;
 my $cmd = '';
 
 # merge MP3s
-$cmd = "cat '$dir'/* > ./output/merged.mp3";
-print "$cmd\n";
-`$cmd`;
+#$cmd = "cat '$dir/*' > ./output/merged.mp3";
+#print "$cmd\n";
+#`$cmd`;
+system("cat", "$dir/*.mp3", "> ./output/merged.mp3");
 
 # merged MP3s + JPEG -> video
-$cmd = "ffmpeg -loop 1 -i '$dir'/cover.jpg -i ./output/merged.mp3 -shortest -c:v libx264 -c:a copy -y ./output/album-upload.mkv";
-print "$cmd\n";
-`$cmd`;
+#$cmd = "ffmpeg -loop 1 -i '$dir'/cover.jpg -i ./output/merged.mp3 -shortest -c:v libx264 -c:a copy -y ./output/album-upload.mkv";
+#print "$cmd\n";
+#`$cmd`;
+system("ffmpeg", "-loop", "1", "-i", "$dir/cover.jpg", "-i", "./output/merged.mp3", "-shortest", "-c:v", "libx264", "-c:a", "copy", "-y", "./output/album-upload.mkv");
 
 unlink './outout/merged.mp3';
